@@ -591,6 +591,7 @@
 		<Compile Include="ActionMenu.cs" />
 		<Compile Include="Command.cs" />
 		<Compile Include="Core.cs" />
+		<Compile Include="Player.cs" />
 		<Content Include="Directory.Build.props" />
 	</ItemGroup>
 	

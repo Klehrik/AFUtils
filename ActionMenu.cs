@@ -43,8 +43,7 @@ public class ActionMenu
 
         public Option(Action callback, string label)
         {
-            ID = idCounter;
-            idCounter++;
+            ID = idCounter++;
             Label = label;
             callbacks[ID] = callback;
         }

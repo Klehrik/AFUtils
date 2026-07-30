@@ -8,6 +8,8 @@ namespace AFUtils;
 public class Core : MelonMod
 {
     // TESTING - Remove before publishing
+    public Command cmd;
+
     public override void OnInitializeMelon()
     {
         var option = new ActionMenu.Option(
@@ -24,5 +26,20 @@ public class Core : MelonMod
                 ActionMenu.AddOption(option, "some text");
             }
         );
+
+        cmd = new Command(
+            () =>
+            {
+                LoggerInstance.Msg("Ja... rona?");
+            }
+        );
+    }
+
+    public override void OnUpdate()
+    {
+        if (UnityEngine.InputSystem.Keyboard.current.hKey.wasPressedThisFrame)
+        {
+            cmd.Send();
+        }
     }
 }
