@@ -23,14 +23,15 @@ public class Core : MelonMod
         ActionMenu.RegisterForCollection(() =>
             {
                 ActionMenu.AddOption(option);
-                ActionMenu.AddOption(option, "some text");
+                ActionMenu.AddOption(option, "specific text");
             }
         );
 
         cmd = new Command(
-            () =>
+            (Il2CppQuantum.Frame f) =>
             {
                 LoggerInstance.Msg("Ja... rona?");
+                LoggerInstance.Msg("Frame is " + f.Number);
             }
         );
     }
@@ -39,6 +40,7 @@ public class Core : MelonMod
     {
         if (UnityEngine.InputSystem.Keyboard.current.hKey.wasPressedThisFrame)
         {
+            LoggerInstance.Msg("Sending command!");
             cmd.Send();
         }
     }

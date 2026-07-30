@@ -6,11 +6,11 @@ namespace AFUtils;
 public class Command
 {
     private static int idCounter = 20000;
-    private static readonly Dictionary<int, Action> callbacks = new Dictionary<int, Action>();
+    private static readonly Dictionary<int, Action<Frame>> callbacks = new Dictionary<int, Action<Frame>>();
 
     public int ID { get; }
 
-    public Command(Action callback)
+    public Command(Action<Frame> callback)
     {
         ID = idCounter++;
         callbacks[ID] = callback;
@@ -38,7 +38,13 @@ public class Command
             var ID = __instance.action;
             if (callbacks.ContainsKey(ID))
             {
-                callbacks[ID]();
+                // Prevent execution for the caller
+                // This is because Execute runs multiple times
+                // for the caller for whatever reason
+                if (__instance.player != Player.GetLocal().playerEntityRef)
+                {
+                    callbacks[ID](f);
+                }
                 return false;
             }
             return true;
