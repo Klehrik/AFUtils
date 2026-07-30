@@ -5,7 +5,7 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace AFUtils;
 
-public class ActionMenu
+public static class ActionMenu
 {
     private static readonly List<Action> callbacks = new List<Action>();
     private static readonly List<(int, string)> collected = new List<(int, string)>();

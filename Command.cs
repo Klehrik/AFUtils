@@ -1,19 +1,29 @@
-﻿using HarmonyLib;
+﻿using System.Text;
+using HarmonyLib;
+using Il2Cpp;
 using Il2CppQuantum;
+using Il2CppQuantum_Core;
+using Il2CppPhoton.Client;
 
 namespace AFUtils;
 
 public class Command
 {
     private static int idCounter = 20000;
-    private static readonly Dictionary<int, Action<Frame>> callbacks = new Dictionary<int, Action<Frame>>();
+    private static readonly Dictionary<int, string> idToIdentifier = new Dictionary<int, string>();
+    private static readonly Dictionary<string, int> identifierToId = new Dictionary<string, int>();
+    private static readonly Dictionary<string, Action<Frame>> callbacks = new Dictionary<string, Action<Frame>>();
 
-    public int ID { get; }
+    public string Identifier { get; }
 
-    public Command(Action<Frame> callback)
+    public Command(string identifier, Action<Frame> callback)
     {
-        ID = idCounter++;
-        callbacks[ID] = callback;
+        Identifier = identifier;
+        callbacks[Identifier] = callback;
+
+        var ID = idCounter++;
+        idToIdentifier[ID] = identifier;
+        identifierToId[identifier] = ID;
     }
 
     public bool Send()
@@ -22,8 +32,8 @@ public class Command
         if (game == null) return false;
 
         var cmd = new SpecialActionCommand();
-        cmd.action = ID;
-        cmd.player = Player.GetLocal().playerEntityRef;
+        cmd.action = identifierToId[Identifier];
+        cmd.player = Misc.GetLocalHumanoidView().playerEntityRef;
         game.SendCommand(cmd);
 
         return true;
@@ -36,18 +46,102 @@ public class Command
         {
             // Intercept action IDs that are used here
             var ID = __instance.action;
-            if (callbacks.ContainsKey(ID))
+            if (idToIdentifier.ContainsKey(ID))
             {
-                // Prevent execution for the caller
-                // This is because Execute runs multiple times
-                // for the caller for whatever reason
-                if (__instance.player != Player.GetLocal().playerEntityRef)
+                var identifier = idToIdentifier[ID];
+                if (callbacks.ContainsKey(identifier))
                 {
-                    callbacks[ID](f);
+                    // This will run multiple times for the caller
+                    // (on every predicted frame and the final verified one)
+                    // Check for `f.IsVerified` to have it only run once
+                    callbacks[identifier](f);
+                    return false;
                 }
-                return false;
             }
             return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(PlayerJoinSystem), nameof(PlayerJoinSystem.OnPlayerAdded))]
+    public static class PlayerJoinSystemPatch
+    {
+        static void Postfix(PlayerJoinSystem __instance)
+        {
+            var controllerInstance = PhotonController.instance;
+            if (controllerInstance.IsMasterClient())
+            {
+                var client = controllerInstance.client;
+                var room = client.CurrentRoom;
+                if (client.CurrentRoom != null)
+                {
+                    // Send the host's command identifier<->ID mapping to all players
+                    var commandMapping = new PhotonHashtable();
+                    foreach (var command in identifierToId)
+                    {
+                        commandMapping.Add(command.Key, command.Value.ToString());
+                        // ^ Need to do int->string or the game will hang when exiting a room
+                    }
+                    var properties = new PhotonHashtable();
+                    properties.Add("AFUtils_Command", commandMapping);
+                    client.LocalPlayer.SetCustomProperties(properties, null);
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(PhotonController), nameof(PhotonController.OnPlayerPropertiesUpdate))]
+    public static class PhotonControllerPatch
+    {
+        static void Postfix(Il2CppPhoton.Realtime.Player targetPlayer, PhotonHashtable changedProps)
+        {
+            if (targetPlayer.IsLocal) return;
+            if (!changedProps.ContainsKey("AFUtils_Command")) return;
+
+            // Convert PhotonHashtable to Dictionary (ContainsKey is used later)
+            var commands = changedProps["AFUtils_Command"].Cast<PhotonHashtable>();
+            var incoming = new Dictionary<string, int>();
+            foreach (var command in commands)
+            {
+                var identifier = command.Key.ToString();
+                var ID = int.Parse(command.Value.ToString());
+                incoming[identifier] = ID;
+            }
+
+            var sb = new StringBuilder("Incoming host command mappings:");
+            foreach (var command in incoming)
+            {
+                var identifier = command.Key;
+                var ID = command.Value;
+                sb.Append("\n" + ID + ": " + identifier);
+
+                // Increment `idCounter` if it is lower than `ID`
+                // to not return one possibly already in use
+                idCounter = Math.Max(idCounter, ID + 1);
+
+                // If there is a current mapping at `ID`,
+                // move it to a new one
+                if (idToIdentifier.ContainsKey(ID))
+                {
+                    var existingIdentifier = idToIdentifier[ID];
+                    if (existingIdentifier != identifier)
+                    {
+                        var newID = idCounter++;
+
+                        // Do not set if it is in the incoming mapping,
+                        // since it will be handled (or has been already)
+                        if (!incoming.ContainsKey(existingIdentifier))
+                        {
+                            idToIdentifier[newID] = existingIdentifier;
+                            identifierToId[existingIdentifier] = newID;
+                        }
+                    }
+                }
+
+                // Set new mapping
+                idToIdentifier[ID] = identifier;
+                identifierToId[identifier] = ID;
+            }
+            Core.Logger.Msg(sb);
         }
     }
 }
