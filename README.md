@@ -69,6 +69,6 @@ cmd.Send();
 
 ### Misc
 ```cs
-public static Humanoid_View GetLocalHumanoidView()
 // Returns the Humanoid_View for this client's player.
+public static Humanoid_View GetLocalHumanoidView()
 ```
