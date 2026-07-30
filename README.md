@@ -46,7 +46,7 @@ using AFUtils;
 // ...
 
 var cmd = new Command(
-    // The unique identifier for the command; consider prepending your mod name
+    // The unique identifier for the command; consider prepending your mod name or something
     "myMod_myCommand",
 
     // This function will run when the command is sent
