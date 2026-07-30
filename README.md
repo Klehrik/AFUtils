@@ -9,7 +9,7 @@ Small miscellaneous library for modding Airframe Ultra Beta v0.34.
 - Add this assembly attribute: `[assembly: MelonAdditionalDependencies("AFUtils")]`
 
 ## Features
-### ActionMenu.Option
+### ActionMenu
 ```cs
 using AFUtils;
 
@@ -37,4 +37,38 @@ ActionMenu.RegisterForCollection(
         ActionMenu.AddOption(option, "specific text");
     }
 );
+```
+
+### Command
+```cs
+using AFUtil;
+
+// ...
+
+var cmd = new Command(
+    // The unique identifier for the command; consider prepending your mod name
+    "myMod_myCommand",
+
+    // This function will run when the command is sent
+    // It executes for all players, including the caller
+    (Il2CppQuantum.Frame f) =>
+    {
+        LoggerInstance.Msg("AAAAHHHRGH!");
+
+        // For the caller specifically, this will run
+        // multiple times (on every predicted frame + the final verified one)
+        // If you don't want this, add a check for `f.IsVerified`
+        if (!f.IsVerified) return;
+        LoggerInstance.Msg("This line prints once");
+    }
+);
+
+// Execute the command for all players
+cmd.Send();
+```
+
+### Misc
+```cs
+public static Humanoid_View GetLocalHumanoidView()
+// Returns the Humanoid_View for this client's player.
 ```
