@@ -41,7 +41,7 @@ ActionMenu.RegisterForCollection(
 
 ### Command
 ```cs
-using AFUtil;
+using AFUtils;
 
 // ...
 
