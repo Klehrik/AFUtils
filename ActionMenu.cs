@@ -6,7 +6,7 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 namespace AFUtils;
 
 /// <summary>
-/// Allows for adding new options to the action menu.
+/// Allows for adding new options to the action menu. <br></br>
 /// Works by hijacking <c>SpecialActionCommand</c> and using unique action IDs.
 /// </summary>
 public static class ActionMenu
