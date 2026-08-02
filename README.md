@@ -71,4 +71,7 @@ cmd.Send();
 ```cs
 // Returns the Humanoid_View for this client's player.
 public static Humanoid_View GetLocalHumanoidView()
+
+// Prints a list of components belonging to a Quantum entity.
+public static void PrintComponentList(EntityRef r)
 ```
