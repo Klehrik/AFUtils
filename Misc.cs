@@ -1,19 +1,24 @@
 ﻿using UnityEngine;
 using Il2CppQuantum;
 using Il2CppView_Humanoid;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace AFUtils;
 
+/// <summary>
+/// Contains miscellaneous helper methods.
+/// </summary>
 public static class Misc
 {
     private static Humanoid_View localHumanoidView;
 
+    /// <summary>
+    /// Returns the <c>Humanoid_View</c> belonging to the local player.
+    /// </summary>
     public static Humanoid_View GetLocalHumanoidView()
     {
         if (localHumanoidView != null) return localHumanoidView;
 
-        Il2CppArrayBase<Humanoid_View> views = GameObject.FindObjectsOfType<Humanoid_View>();
+        var views = GameObject.FindObjectsOfType<Humanoid_View>();
         foreach (var view in views)
         {
             if (view.isLocal)
@@ -25,11 +30,14 @@ public static class Misc
         return null;
     }
 
+    /// <summary>
+    /// Prints a list of components belonging to a Quantum entity.
+    /// </summary>
     public static void PrintComponentList(EntityRef r)
     {
         var game = QuantumRunner.Default?.Game;
         if (game == null) return;
-        Frame frame = game.Frames.Verified;
+        var frame = game.Frames.Verified;
         var sb = new System.Text.StringBuilder($"\nEntity '{r}' components:\n");
 
         if (frame.Has<Transform2D>(r)) sb.Append("Il2CppQuantum.Transform2D\n");

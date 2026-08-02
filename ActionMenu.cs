@@ -5,21 +5,42 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace AFUtils;
 
+/// <summary>
+/// Allows for adding new options to the action menu.
+/// Works by hijacking <c>SpecialActionCommand</c> and using unique action IDs.
+/// </summary>
 public static class ActionMenu
 {
     private static readonly List<Action> callbacks = new List<Action>();
     private static readonly List<(int, string)> collected = new List<(int, string)>();
+    private static bool collecting = false;
 
+    /// <summary>
+    /// Registers a function to be called whenever option collection happens for the menu.
+    /// </summary>
+    /// <param name="callback"><c>AddOption</c> should be called in here to add options.</param>
     public static void RegisterForCollection(Action callback)
     {
         callbacks.Add(callback);
     }
 
+    /// <summary>
+    /// Adds an option to the action menu.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
     public static void AddOption(Option option, string label)
     {
+        if (!collecting)
+        {
+            throw new InvalidOperationException("Cannot add options outside of collection time.");
+        }
         collected.Add((option.ID, label));
     }
 
+    /// <summary>
+    /// Adds an option to the action menu.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
     public static void AddOption(Option option)
     {
         AddOption(option, option.Label);
@@ -33,14 +54,27 @@ public static class ActionMenu
         }
     }
 
+    /// <summary>
+    /// Represents an action menu option.
+    /// </summary>
     public class Option
     {
         private static int idCounter = 10000;
         internal static readonly Dictionary<int, Action> callbacks = new Dictionary<int, Action>();
 
+        /// <summary>
+        /// The unique action ID of the option. <br></br>
+        /// These start at <c>10000</c>.
+        /// </summary>
         public int ID { get; }
+
+        /// <summary>
+        /// The default label for the option. <br></br>
+        /// Used if one is not explicitly passed to <c>AddOption</c>.
+        /// </summary>
         public string Label { get; set; }
 
+        /// <param name="callback">The function to call when the option is selected.</param>
         public Option(Action callback, string label)
         {
             ID = idCounter++;
@@ -48,6 +82,7 @@ public static class ActionMenu
             callbacks[ID] = callback;
         }
 
+        /// <param name="callback">The function to call when the option is selected.</param>
         public Option(Action callback) : this(callback, "unknown")
         {
         }
@@ -62,6 +97,7 @@ public static class ActionMenu
         {
             if (__instance.type == HUD_Component.HUDComponentType.Radial_SpecialAction)
             {
+                collecting = true;
                 CollectOptions();
             }
         }
@@ -81,6 +117,7 @@ public static class ActionMenu
             // Need to clear so it doesn't bleed into the other
             // menus since they are all `RadialMenu_Component`s
             collected.Clear();
+            collecting = false;
         }
 
         [HarmonyPostfix]

@@ -7,6 +7,10 @@ using Il2CppPhoton.Client;
 
 namespace AFUtils;
 
+/// <summary>
+/// Allows for creating custom DeterministicCommands. <br></br>
+/// Works by hijacking <c>SpecialActionCommand</c> and using unique action IDs.
+/// </summary>
 public class Command
 {
     private static int idCounter = 20000;
@@ -14,8 +18,13 @@ public class Command
     private static readonly Dictionary<string, int> identifierToId = new Dictionary<string, int>();
     private static readonly Dictionary<string, Action<Frame>> callbacks = new Dictionary<string, Action<Frame>>();
 
+    /// <summary>
+    /// The unique identifier for this command.
+    /// </summary>
     public string Identifier { get; }
 
+    /// <param name="identifier"></param>
+    /// <param name="callback"><para>The function to call when the command is sent.</para> <para>It is called for every client, including the caller. <br></br>For the caller specifically, it is called multiple times (on every predicted frame <br></br>plus the final verified one); if you don't want this, add a check for <c>Frame.IsVerified</c></para></param>
     public Command(string identifier, Action<Frame> callback)
     {
         Identifier = identifier;
@@ -26,17 +35,45 @@ public class Command
         identifierToId[identifier] = ID;
     }
 
-    public bool Send()
+    /// <summary>
+    /// Executes the command for every client.
+    /// </summary>
+    /// <param name="error">The error message on a fail (usually when the local <c>Humanoid_View</c> does not exist yet).</param>
+    /// <returns><c>true</c> if successful.</returns>
+    public bool Send(out string error)
     {
         var game = QuantumRunner.Default?.Game;
-        if (game == null) return false;
+        if (game == null)
+        {
+            error = $"Command '{Identifier}': 'QuantumRunner.Default.Game' is null";
+            return false;
+        }
 
-        var cmd = new SpecialActionCommand();
-        cmd.action = identifierToId[Identifier];
-        cmd.player = Misc.GetLocalHumanoidView().playerEntityRef;
+        var view = Misc.GetLocalHumanoidView();
+        if (view == null)
+        {
+            error = $"Command '{Identifier}': Cannot find local Humanoid_View";
+            return false;
+        }
+
+        var cmd = new SpecialActionCommand
+        {
+            action = identifierToId[Identifier],
+            player = view.playerEntityRef
+        };
         game.SendCommand(cmd);
 
+        error = "";
         return true;
+    }
+
+    /// <summary>
+    /// Executes the command for every client.
+    /// </summary>
+    /// <returns><c>true</c> if successful.</returns>
+    public bool Send()
+    {
+        return Send(out _);
     }
 
     [HarmonyPatch(typeof(SpecialActionCommand), nameof(SpecialActionCommand.Execute))]
