@@ -68,7 +68,7 @@ cmd.Send();
 ```
 
 ### Packet
-```
+```cs
 using AFUtils;
 
 var packet = new Packet(
