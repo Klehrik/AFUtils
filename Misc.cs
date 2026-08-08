@@ -31,6 +31,15 @@ public static class Misc
     }
 
     /// <summary>
+    /// Returns <c>true</c> if this client is the room host. <br></br>Always <c>true</c> outside of an online room.
+    /// </summary>
+    public static bool IsHost()
+    {
+        var controllerInstance = Il2Cpp.PhotonController.instance;
+        return controllerInstance.IsMasterClient();
+    }
+
+    /// <summary>
     /// Prints a list of components belonging to a Quantum entity.
     /// </summary>
     public static void PrintComponentList(EntityRef r)

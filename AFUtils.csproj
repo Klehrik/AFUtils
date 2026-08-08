@@ -592,6 +592,7 @@
 		<Compile Include="Command.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Misc.cs" />
+		<Compile Include="Packet.cs" />
 		<Content Include="Directory.Build.props" />
 	</ItemGroup>
 	

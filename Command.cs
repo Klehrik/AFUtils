@@ -23,10 +23,14 @@ public class Command
     /// </summary>
     public string Identifier { get; }
 
-    /// <param name="identifier"></param>
     /// <param name="callback"><para>The function to call when the command is sent.</para> <para>It is called for every client, including the caller. <br></br>For the caller specifically, it is called multiple times (on every predicted frame <br></br>plus the final verified one); if you don't want this, add a check for <c>Frame.IsVerified</c></para></param>
     public Command(string identifier, Action<Frame> callback)
     {
+        if (callbacks.ContainsKey(identifier))
+        {
+            throw new ArgumentException($"Identifier '{identifier}' is already in use.");
+        }
+
         Identifier = identifier;
         callbacks[Identifier] = callback;
 

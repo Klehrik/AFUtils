@@ -1,6 +1,6 @@
 ﻿using MelonLoader;
 
-[assembly: MelonInfo(typeof(AFUtils.Core), "AFUtils", "1.0.1", "Klehrik", null)]
+[assembly: MelonInfo(typeof(AFUtils.Core), "AFUtils", "1.0.2", "Klehrik", null)]
 [assembly: MelonGame("Videocult", "Airframe")]
 
 namespace AFUtils;
