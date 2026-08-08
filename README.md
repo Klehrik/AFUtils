@@ -67,10 +67,43 @@ var cmd = new Command(
 cmd.Send();
 ```
 
+### Packet
+```
+using AFUtils;
+
+var packet = new Packet(
+    // The unique identifier for the packet; consider prepending your mod name or something
+    "myMod_myPacket",
+
+    // This function will run when the packet is received
+    // It executes for all clients excluding the sender
+    (Il2CppPhoton.Realtime.Player player, Dictionary<string, string> data) =>
+    {
+        LoggerInstance.Msg($"{data["abc"]}, {data["def"]}");
+    }
+);
+
+// ...
+
+// Send the packet to all other clients
+// Returns `true` if successful
+packet.Send(
+    new Dictionary<string, string>
+    {
+        ["abc"] = "123",
+        ["def"] = "456",
+    }
+);
+```
+
 ### Misc
 ```cs
-// Returns the Humanoid_View for this client's player.
+// Returns the Humanoid_View belonging to the local player.
 public static Humanoid_View GetLocalHumanoidView()
+
+// Returns `true` if this client is the room host.
+// Always `true` outside of an online room.
+public static bool IsHost()
 
 // Prints a list of components belonging to a Quantum entity.
 public static void PrintComponentList(EntityRef r)

@@ -30,7 +30,7 @@ public class Packet
     }
 
     /// <summary>
-    /// Sends an arbitrary string dictionary to all other players.
+    /// Sends an arbitrary string dictionary to all other clients.
     /// </summary>
     /// <returns><c>true</c> if successful.</returns>
     public bool Send(Dictionary<string, string> dict)
